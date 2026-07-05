@@ -1,6 +1,8 @@
 import unittest
 
-from app import app, db
+from sqlalchemy import text
+
+from app import app, db, ensure_schema
 
 
 class FeedbackAppTests(unittest.TestCase):
@@ -37,6 +39,21 @@ class FeedbackAppTests(unittest.TestCase):
         list_response = self.client.get("/feedbacks")
         self.assertEqual(list_response.status_code, 200)
         self.assertIn(b"Add dark mode", list_response.data)
+
+    def test_feedbacks_route_handles_old_schema(self):
+        with self.app.app_context():
+            db.session.execute(text("DROP TABLE IF EXISTS feedback"))
+            db.session.execute(
+                text(
+                    "CREATE TABLE feedback (id INTEGER NOT NULL, name VARCHAR(120) NOT NULL, email VARCHAR(200) NOT NULL, feedback_type VARCHAR(50) NOT NULL, title VARCHAR(200) NOT NULL, message TEXT NOT NULL, status VARCHAR(20), created_at DATETIME, PRIMARY KEY (id))"
+                )
+            )
+            db.session.commit()
+            ensure_schema()
+
+        response = self.client.get("/feedbacks")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"No feedback has been captured yet.", response.data)
 
 
 if __name__ == "__main__":

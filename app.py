@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect, text
 import os
 from datetime import datetime
 
@@ -33,8 +34,25 @@ class Feedback(db.Model):
         return f"<Feedback {self.app_name} - {self.title}>"
 
 
-with app.app_context():
-    db.create_all()
+def ensure_schema():
+    with app.app_context():
+        db.create_all()
+        inspector = inspect(db.engine)
+        if "feedback" not in inspector.get_table_names():
+            return
+
+        columns = {column["name"] for column in inspector.get_columns("feedback")}
+        if "app_name" not in columns:
+            db.session.execute(
+                text("ALTER TABLE feedback ADD COLUMN app_name VARCHAR(80) DEFAULT 'NPSCSAT'")
+            )
+            db.session.execute(
+                text("UPDATE feedback SET app_name = 'NPSCSAT' WHERE app_name IS NULL")
+            )
+            db.session.commit()
+
+
+ensure_schema()
 
 
 @app.route("/")
