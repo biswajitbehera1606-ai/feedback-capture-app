@@ -2,19 +2,26 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
 from types import SimpleNamespace
+from dotenv import load_dotenv
 import os
 from datetime import datetime
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_DIR = os.path.join(BASE_DIR, "instance")
 os.makedirs(INSTANCE_DIR, exist_ok=True)
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+
+def get_database_uri():
+    return os.environ.get(
+        "DATABASE_URL",
+        f"sqlite:///{os.path.join(INSTANCE_DIR, 'feedback.db')}",
+    )
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL",
-    f"sqlite:///{os.path.join(INSTANCE_DIR, 'feedback.db')}",
-)
+app.config["SQLALCHEMY_DATABASE_URI"] = get_database_uri()
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)

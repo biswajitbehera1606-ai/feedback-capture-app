@@ -1,8 +1,9 @@
+import os
 import unittest
 
 from sqlalchemy import text
 
-from app import app, db, ensure_schema, Feedback
+from app import app, db, ensure_schema, Feedback, get_database_uri
 
 
 class FeedbackAppTests(unittest.TestCase):
@@ -54,6 +55,17 @@ class FeedbackAppTests(unittest.TestCase):
         response = self.client.get("/feedbacks")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"No feedback has been captured yet for this application.", response.data)
+
+    def test_database_uri_prefers_environment_value(self):
+        original = os.environ.get("DATABASE_URL")
+        os.environ["DATABASE_URL"] = "postgresql://user:pass@host:5432/db"
+        try:
+            self.assertEqual(get_database_uri(), "postgresql://user:pass@host:5432/db")
+        finally:
+            if original is None:
+                os.environ.pop("DATABASE_URL", None)
+            else:
+                os.environ["DATABASE_URL"] = original
 
     def test_feedbacks_route_filters_by_app(self):
         with self.app.app_context():
