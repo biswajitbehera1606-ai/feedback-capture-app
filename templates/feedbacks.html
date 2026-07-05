@@ -17,7 +17,18 @@
       .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; font-size: 0.8rem; }
       .button { display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border-radius: 8px; background: #2563eb; color: white; text-decoration: none; margin-bottom: 20px; }
       .button:hover { background: #1d4ed8; }
+      .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 18px 0 20px; }
+      .filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+      .filter-tab { display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; border-radius: 999px; border: 1px solid #cbd5e1; color: #334155; text-decoration: none; font-weight: 600; background: #f8fafc; }
+      .filter-tab.active { background: #2563eb; color: white; border-color: #2563eb; }
+      .filter-select { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 220px; }
+      .empty-state { padding: 18px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; color: #475569; }
       a { color: #2563eb; text-decoration: none; }
+      @media (max-width: 640px) {
+        .filter-bar { align-items: stretch; }
+        .filter-tabs { display: none; }
+        .filter-select { width: 100%; min-width: 0; }
+      }
     </style>
   </head>
   <body>
@@ -39,19 +50,31 @@
       {% endwith %}
 
       <a class="button" href="/">Back to form</a>
-      <hr />
+
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          {% for value, label in app_filters %}
+            <a class="filter-tab {% if selected_app == value %}active{% endif %}" href="{{ url_for('list_feedbacks', app=value) }}">{{ label }}</a>
+          {% endfor %}
+        </div>
+        <select class="filter-select" onchange="location.href=this.value">
+          {% for value, label in app_filters %}
+            <option value="{{ url_for('list_feedbacks', app=value) }}" {% if selected_app == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
       {% if feedbacks %}
         {% for item in feedbacks %}
           <div class="card">
-            <div class="meta">{{ item.created_at.strftime('%d %b %Y %H:%M') }} • {{ item.app_name }} • {{ item.name }} • {{ item.email }}</div>
+            <div class="meta">{{ item.created_at.strftime('%d %b %Y %H:%M') }} • {{ {'NPSCSAT': 'NPSCSAT', 'CAMT': 'CAMT', 'queue_shift_management': 'Queue Shift Management'}.get(item.app_name, item.app_name) }} • {{ item.name }} • {{ item.email }}</div>
             <strong>{{ item.title }}</strong>
             <div style="margin: 6px 0;"><span class="pill">{{ item.feedback_type }}</span></div>
             <div>{{ item.message }}</div>
           </div>
         {% endfor %}
       {% else %}
-        <p>No feedback has been captured yet.</p>
+        <div class="empty-state">No feedback has been captured yet for this application.</div>
       {% endif %}
     </div>
   </body>

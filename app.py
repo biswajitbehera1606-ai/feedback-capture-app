@@ -35,6 +35,14 @@ class Feedback(db.Model):
         return f"<Feedback {self.app_name} - {self.title}>"
 
 
+APP_FILTERS = [
+    ("all", "All"),
+    ("NPSCSAT", "NPSCSAT"),
+    ("CAMT", "CAMT"),
+    ("queue_shift_management", "Queue Shift Management"),
+]
+
+
 def ensure_schema():
     with app.app_context():
         db.create_all()
@@ -51,6 +59,11 @@ def ensure_schema():
                 text("UPDATE feedback SET app_name = 'NPSCSAT' WHERE app_name IS NULL")
             )
             db.session.commit()
+
+
+def normalize_app_filter(value):
+    value = (value or "all").strip()
+    return value if value in {item[0] for item in APP_FILTERS} else "all"
 
 
 ensure_schema()
@@ -91,15 +104,28 @@ def submit_feedback():
 
 @app.route("/feedbacks")
 def list_feedbacks():
+    selected_app = normalize_app_filter(request.args.get("app", "all"))
+
     try:
-        feedbacks = Feedback.query.order_by(Feedback.created_at.desc()).all()
+        query = Feedback.query
+        if selected_app != "all":
+            query = query.filter(Feedback.app_name == selected_app)
+        feedbacks = query.order_by(Feedback.created_at.desc()).all()
     except Exception:
         try:
-            rows = db.session.execute(
-                text(
-                    "SELECT id, name, email, feedback_type, title, message, status, created_at FROM feedback ORDER BY created_at DESC"
-                )
-            ).mappings().all()
+            if selected_app != "all":
+                rows = db.session.execute(
+                    text(
+                        "SELECT id, app_name, name, email, feedback_type, title, message, status, created_at FROM feedback WHERE app_name = :app ORDER BY created_at DESC"
+                    ),
+                    {"app": selected_app},
+                ).mappings().all()
+            else:
+                rows = db.session.execute(
+                    text(
+                        "SELECT id, app_name, name, email, feedback_type, title, message, status, created_at FROM feedback ORDER BY created_at DESC"
+                    )
+                ).mappings().all()
             feedbacks = [
                 SimpleNamespace(
                     app_name=row.get("app_name", "NPSCSAT"),
@@ -115,7 +141,12 @@ def list_feedbacks():
         except Exception:
             feedbacks = []
 
-    return render_template("feedbacks.html", feedbacks=feedbacks)
+    return render_template(
+        "feedbacks.html",
+        feedbacks=feedbacks,
+        selected_app=selected_app,
+        app_filters=APP_FILTERS,
+    )
 
 
 @app.route("/health")

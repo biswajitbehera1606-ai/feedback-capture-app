@@ -2,7 +2,7 @@ import unittest
 
 from sqlalchemy import text
 
-from app import app, db, ensure_schema
+from app import app, db, ensure_schema, Feedback
 
 
 class FeedbackAppTests(unittest.TestCase):
@@ -53,7 +53,36 @@ class FeedbackAppTests(unittest.TestCase):
 
         response = self.client.get("/feedbacks")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"No feedback has been captured yet.", response.data)
+        self.assertIn(b"No feedback has been captured yet for this application.", response.data)
+
+    def test_feedbacks_route_filters_by_app(self):
+        with self.app.app_context():
+            db.session.add_all(
+                [
+                    Feedback(
+                        app_name="NPSCSAT",
+                        name="Asha",
+                        email="asha@example.com",
+                        feedback_type="idea",
+                        title="NPSCSAT title",
+                        message="NPSCSAT message",
+                    ),
+                    Feedback(
+                        app_name="CAMT",
+                        name="Ravi",
+                        email="ravi@example.com",
+                        feedback_type="bug",
+                        title="CAMT title",
+                        message="CAMT message",
+                    ),
+                ]
+            )
+            db.session.commit()
+
+        response = self.client.get("/feedbacks?app=NPSCSAT")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"NPSCSAT title", response.data)
+        self.assertNotIn(b"CAMT title", response.data)
 
 
 if __name__ == "__main__":
