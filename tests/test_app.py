@@ -16,12 +16,13 @@ class FeedbackAppTests(unittest.TestCase):
     def test_home_page_renders(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Feedback and Enhancement Requests", response.data)
+        self.assertIn(b"Share application feedback", response.data)
 
     def test_submit_feedback_and_list_it(self):
         response = self.client.post(
             "/submit",
             data={
+                "app_name": "NPSCSAT",
                 "name": "Asha",
                 "email": "asha@example.com",
                 "feedback_type": "enhancement",

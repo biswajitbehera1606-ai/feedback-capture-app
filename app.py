@@ -20,6 +20,7 @@ db = SQLAlchemy(app)
 
 class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    app_name = db.Column(db.String(80), nullable=False)
     name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(200), nullable=False)
     feedback_type = db.Column(db.String(50), nullable=False)
@@ -29,7 +30,7 @@ class Feedback(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<Feedback {self.title}>"
+        return f"<Feedback {self.app_name} - {self.title}>"
 
 
 with app.app_context():
@@ -45,15 +46,17 @@ def index():
 def submit_feedback():
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip()
+    app_name = request.form.get("app_name", "NPSCSAT").strip()
     feedback_type = request.form.get("feedback_type", "idea").strip()
     title = request.form.get("title", "").strip()
     message = request.form.get("message", "").strip()
 
-    if not all([name, email, title, message]):
+    if not all([app_name, name, email, title, message]):
         flash("Please fill in all required fields.")
         return redirect(url_for("index"))
 
     feedback = Feedback(
+        app_name=app_name,
         name=name,
         email=email,
         feedback_type=feedback_type,

@@ -7,7 +7,11 @@
     <style>
       body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
       .container { max-width: 760px; margin: 40px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-      h1 { margin-top: 0; }
+      .header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+      .logo { display: inline-flex; align-items: center; }
+      .brand-text { font-size: 1.6rem; font-weight: 700; letter-spacing: 0.08em; color: #2563eb; font-family: Arial, sans-serif; }
+      h1 { margin: 0; font-size: 1.9rem; }
+      .subtitle { margin: 12px 0 24px; color: #475569; line-height: 1.6; }
       .alert { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; background: #ecfdf3; color: #047857; }
       .form-grid { display: grid; gap: 14px; }
       label { font-weight: 600; }
@@ -19,8 +23,13 @@
   </head>
   <body>
     <div class="container">
-      <h1>Feedback and Enhancement Requests</h1>
-      <p>Use this screen to collect ideas, feature requests, and improvement suggestions from your users.</p>
+      <div class="header">
+        <div class="logo">
+          <span class="brand-text">HCLSoftware</span>
+        </div>
+      </div>
+      <h1>Share application feedback</h1>
+      <p class="subtitle">Give your feedback for the application here. Choose the application, write your ideas or requests, and submit so we can improve it.</p>
 
       {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -32,15 +41,23 @@
 
       <form action="/submit" method="post" class="form-grid">
         <div>
-          <label for="name">Name</label>
+          <label for="app_name">Application name</label>
+          <select id="app_name" name="app_name" required>
+            <option value="NPSCSAT">NPSCSAT</option>
+            <option value="CAMT">CAMT</option>
+            <option value="queue_shift_management">Queue Shift Management</option>
+          </select>
+        </div>
+        <div>
+          <label for="name">Your name</label>
           <input id="name" name="name" required />
         </div>
         <div>
-          <label for="email">Email</label>
+          <label for="email">Your email</label>
           <input id="email" name="email" type="email" required />
         </div>
         <div>
-          <label for="feedback_type">Type</label>
+          <label for="feedback_type">Feedback Type</label>
           <select id="feedback_type" name="feedback_type">
             <option value="idea">Idea</option>
             <option value="enhancement">Enhancement</option>
