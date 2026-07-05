@@ -60,7 +60,7 @@ class FeedbackAppTests(unittest.TestCase):
         original = os.environ.get("DATABASE_URL")
         os.environ["DATABASE_URL"] = "postgresql://user:pass@host:5432/db"
         try:
-            self.assertEqual(get_database_uri(), "postgresql://user:pass@host:5432/db")
+            self.assertEqual(get_database_uri(), "postgresql+psycopg://user:pass@host:5432/db")
         finally:
             if original is None:
                 os.environ.pop("DATABASE_URL", None)

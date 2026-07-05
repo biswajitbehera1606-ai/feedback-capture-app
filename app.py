@@ -13,10 +13,15 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
 def get_database_uri():
-    return os.environ.get(
+    uri = os.environ.get(
         "DATABASE_URL",
         f"sqlite:///{os.path.join(INSTANCE_DIR, 'feedback.db')}",
     )
+    if uri.startswith("postgresql://"):
+        return uri.replace("postgresql://", "postgresql+psycopg://", 1)
+    if uri.startswith("postgres://"):
+        return uri.replace("postgres://", "postgresql+psycopg://", 1)
+    return uri
 
 
 app = Flask(__name__)
