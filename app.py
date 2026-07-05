@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
+from types import SimpleNamespace
 import os
 from datetime import datetime
 
@@ -90,7 +91,30 @@ def submit_feedback():
 
 @app.route("/feedbacks")
 def list_feedbacks():
-    feedbacks = Feedback.query.order_by(Feedback.created_at.desc()).all()
+    try:
+        feedbacks = Feedback.query.order_by(Feedback.created_at.desc()).all()
+    except Exception:
+        try:
+            rows = db.session.execute(
+                text(
+                    "SELECT id, name, email, feedback_type, title, message, status, created_at FROM feedback ORDER BY created_at DESC"
+                )
+            ).mappings().all()
+            feedbacks = [
+                SimpleNamespace(
+                    app_name=row.get("app_name", "NPSCSAT"),
+                    name=row.get("name", ""),
+                    email=row.get("email", ""),
+                    feedback_type=row.get("feedback_type", "other"),
+                    title=row.get("title", ""),
+                    message=row.get("message", ""),
+                    created_at=row.get("created_at"),
+                )
+                for row in rows
+            ]
+        except Exception:
+            feedbacks = []
+
     return render_template("feedbacks.html", feedbacks=feedbacks)
 
 
